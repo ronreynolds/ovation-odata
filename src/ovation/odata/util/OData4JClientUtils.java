@@ -2,6 +2,7 @@ package ovation.odata.util;
 
 import org.core4j.Enumerable;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.odata4j.consumer.ODataConsumer;
 import org.odata4j.core.OEntity;
@@ -62,7 +63,7 @@ public class OData4JClientUtils {
 */	
 	public static DateTime getDateTimeProperty(OEntity entity, String name) { 
 		OProperty<LocalDateTime> prop = entity.getProperty(name, LocalDateTime.class);
-		return prop != null && prop.getValue() != null ? prop.getValue().toDateTime() : null; 
+		return prop != null && prop.getValue() != null ? prop.getValue().toDateTime(DateTimeZone.UTC) : null; 
 	}
 	public static Integer  getIntegerProperty(OEntity entity, String name) { 
 		OProperty<Integer> prop = entity.getProperty(name, Integer.class);
