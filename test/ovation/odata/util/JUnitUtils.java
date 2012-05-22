@@ -2,6 +2,9 @@ package ovation.odata.util;
 
 import java.util.Arrays;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import junit.framework.Assert;
 
 public class JUnitUtils {
@@ -25,6 +28,15 @@ public class JUnitUtils {
 		if (expected == actual) return;	// handles identical arrays and both null
 		Assert.assertEquals(msg, Arrays.toString(expected), Arrays.toString(actual));
 	}
+
+    public static void assertEquals(DateTime expected, DateTime actual) {
+        assertEquals(null, expected, actual);
+    }
+    public static void assertEquals(String msg, DateTime expected, DateTime actual) {
+        if (expected == actual) return; // handles identical arrays and both null
+        if (expected == null || actual == null) Assert.assertEquals(msg, expected, actual); // guaranteed to fail
+        Assert.assertEquals(msg, expected.toDateTime(DateTimeZone.UTC), actual.toDateTime(DateTimeZone.UTC)); // DateTime.equals() doesn't seem to account for timezones
+    }
 	
 	public static <T> void assertEquals(T[] expected, T[] actual) {
 		assertEquals(null, expected, actual);
