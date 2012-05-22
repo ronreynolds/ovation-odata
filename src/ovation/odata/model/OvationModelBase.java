@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.odata4j.core.OEntityKey;
 import org.odata4j.producer.QueryInfo;
@@ -806,6 +807,9 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     	return DataContextCache.getThreadContext().objectWithURI(uri);
     }
 
-	public static LocalDateTime 	convertDateTime(DateTime dt) 	{ return dt != null ? dt.toLocalDateTime() : null; }
+	public static LocalDateTime 	convertDateTime(DateTime dt) 	{
+	    if (dt == null) return null;
+        return new LocalDateTime(dt, DateTimeZone.UTC);    // convert to UTC for xfer
+	}
 	public static String 			convertURLToString(URL url) 	{ return url != null ? url.toExternalForm() : null; }
 }
