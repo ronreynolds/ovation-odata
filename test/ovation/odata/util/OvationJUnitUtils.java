@@ -35,7 +35,6 @@ import ovation.Stimulus;
 import ovation.URLResource;
 import ovation.User;
 import ovation.odata.model.OvationModelBase;
-import ovation.odata.model.dao.Property;
 
 /**
  * very similar to the model hierarchy in OvationModelBase, but this one compares OData4J OEntity fields with Ovation DB fields
@@ -74,7 +73,6 @@ public class OvationJUnitUtils {
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-	//	Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation")); - EntityBase has this, but not IEntityBase (but AnalysisRecord does)
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));		- EntityBase has this, but not IEntityBase
 
 		
@@ -207,7 +205,6 @@ USER links - [ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/da
     // Experiment extends PurposeAndNotesEntity (extends TimelineElement (extends AnnotatableEntityBase implements ITimelineElement) implements IOwnerNotes, IScientificPurpose)
     protected static Object getProperty(Experiment obj, PropertyName prop) {
     	switch (prop) {
-    		case SerializedLocation:	return obj.getSerializedLocation();
 	    	case Notes:					return obj.getNotes();		// 2 different interfaces so easier to just handle it here (for now)
 	    	case Purpose: 				return obj.getPurpose();
 	    	default: 					return getProperty((ITimelineElement)obj, prop); 
@@ -247,7 +244,6 @@ EXPERIMENT links - [
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));
 		
 		Assert.assertEquals(msg, fromDb.getNotes(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Notes"));
@@ -264,7 +260,6 @@ EXPERIMENT links - [
 		Assert.assertEquals(msg, fromDb.getScmRevision(), 		OData4JClientUtils.getIntegerProperty(fromSvc,	"ScmRevision", Integer.MIN_VALUE));
 		Assert.assertEquals(msg, fromDb.getEntryFunctionName(), OData4JClientUtils.getStringProperty(fromSvc, 	"EntryFunctionName"));
 		Assert.assertEquals(msg, OvationModelBase.convertURLToString(fromDb.getScmURL()), OData4JClientUtils.getStringProperty(fromSvc, 	"ScmURL"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(), OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 		
 		assertEquals(msg, fromDb.getProject(), OData4JClientUtils.getSubEntity(svc, fromSvc, "Project"), svc, db);
 
@@ -281,7 +276,6 @@ EXPERIMENT links - [
     		case Description: 			return obj.getDescription();
     		case Epoch:					return obj.getEpoch();
     		case Name:					return obj.getName();
-    		case SerializedLocation:	return obj.getSerializedLocation();
     		default: 					return getProperty((IResponseDataBase)obj, prop);
 			case DerivationParameters : return Property.makeIterable(obj.getDerivationParameters());
 			default: 					return getCollection((IResponseDataBase)obj, col);
@@ -293,7 +287,6 @@ EXPERIMENT links - [
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));
 		
 		Assert.assertEquals(msg, fromDb.getDescription(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"Description"));
@@ -308,7 +301,6 @@ EXPERIMENT links - [
 		Assert.assertEquals(msg, fromDb.getURIString(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 						OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 			OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),		OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),			OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));
 // EPOCH links - [ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Owner,title=Owner,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/Owner], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/EpochGroup,title=EpochGroup,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/EpochGroup], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/PreviousEpoch,title=PreviousEpoch,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/PreviousEpoch], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/NextEpoch,title=NextEpoch,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/NextEpoch], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ResourceNames,title=ResourceNames,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/ResourceNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnalysisRecords,title=AnalysisRecords,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/AnalysisRecords], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Responses,title=Responses,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/Responses], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyTags,title=MyTags,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/MyTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/DerivedResponseNames,title=DerivedResponseNames,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/DerivedResponseNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotationGroupTags,title=MyAnnotationGroupTags,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/MyAnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Properties,title=Properties,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/Properties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/DerivedResponses,title=DerivedResponses,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/DerivedResponses], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Tags,title=Tags,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/Tags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotations,title=MyAnnotations,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/MyAnnotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyProperties,title=MyProperties,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/MyProperties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyKeywordTags,title=MyKeywordTags,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/MyKeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnnotationGroupTags,title=AnnotationGroupTags,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/AnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Stimuli,title=Stimuli,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/Stimuli], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ProtocolParameters,title=ProtocolParameters,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/ProtocolParameters], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Annotations,title=Annotations,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/Annotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/KeywordTags,title=KeywordTags,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/KeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/StimuliNames,title=StimuliNames,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/StimuliNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ResponseNames,title=ResponseNames,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/ResponseNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Resources,title=Resources,href=Epochs('5f4b1bbd-979d-414c-ad8d-2a9f95e22161')/Resources]]	
 		Assert.assertEquals(msg, fromDb.getDuration(), 					OData4JClientUtils.getDoubleProperty(fromSvc, 	"Duration"));
@@ -325,7 +317,6 @@ EXPERIMENT links - [
     		case NextEpoch:				return obj.getNextEpoch();
     		case PreviousEpoch:			return obj.getPreviousEpoch();
     		case ProtocolID:			return obj.getProtocolID();
-    		case SerializedLocation:	return obj.getSerializedLocation();
     		default: 					return getProperty((ITimelineElement)obj, prop);
 			case AnalysisRecords:		return CollectionUtils.makeIterable(obj.getAnalysisRecords());
 			case DerivedResponses:		return obj.getDerivedResponseIterable();
@@ -350,7 +341,6 @@ EXPERIMENT links - [
     		case Experiment:		return obj.getExperiment();
     		case Label:				return obj.getLabel();
     		case ParentEpochGroup:	return obj.getParent();
-    		case SerializedLocation:return obj.getSerializedLocation();
     		case Source:			return obj.getSource();
     		default: 				return getProperty((ITimelineElement)obj, prop);
 			case ChildLeafGroupDescendants:	return CollectionUtils.makeIterable(obj.getChildLeafDescendants());
@@ -366,13 +356,12 @@ EXPERIMENT links - [
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));		- EntityBase has this, but not IEntityBase
 // EPOCH_GROUP links - [ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Source,title=Source,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Source], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Owner,title=Owner,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Owner], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ParentEpochGroup,title=ParentEpochGroup,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/ParentEpochGroup], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Experiment,title=Experiment,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Experiment], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ResourceNames,title=ResourceNames,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/ResourceNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyTags,title=MyTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotationGroupTags,title=MyAnnotationGroupTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyAnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Properties,title=Properties,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Properties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotations,title=MyAnnotations,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyAnnotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Tags,title=Tags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Tags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyProperties,title=MyProperties,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyProperties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyKeywordTags,title=MyKeywordTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyKeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnnotationGroupTags,title=AnnotationGroupTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/AnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/GroupChildren,title=GroupChildren,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/GroupChildren], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Annotations,title=Annotations,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Annotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/KeywordTags,title=KeywordTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/KeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Epochs,title=Epochs,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Epochs], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/EpochsUnsorted,title=EpochsUnsorted,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/EpochsUnsorted], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Resources,title=Resources,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Resources], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ChildLeafGroupDescendants,title=ChildLeafGroupDescendants,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/ChildLeafGroupDescendants]]
 		Assert.assertEquals(msg, fromDb.getEpochCount(),		OData4JClientUtils.getIntegerProperty(fromSvc, 	"EpochCount", -1));
 		Assert.assertEquals(msg, fromDb.getLabel(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Label"));
-		Assert.assertEquals(msg, fromDb.getStartTime(), 		OData4JClientUtils.getDateTimeProperty(fromSvc, "StartTime"));
-		Assert.assertEquals(msg, fromDb.getEndTime(), 			OData4JClientUtils.getDateTimeProperty(fromSvc, "EndTime"));
+		JUnitUtils.assertEquals(msg, fromDb.getStartTime(), 		OData4JClientUtils.getDateTimeProperty(fromSvc, "StartTime"));
+		JUnitUtils.assertEquals(msg, fromDb.getEndTime(), 			OData4JClientUtils.getDateTimeProperty(fromSvc, "EndTime"));
 	}
 
 	public static void assertEquals(String msg, ExternalDevice fromDb, OEntity fromSvc, ODataConsumer svc, DataContext db) {
@@ -383,7 +372,6 @@ EXPERIMENT links - [
     		case Experiment:		return obj.getExperiment();
     		case Manufacturer:		return obj.getManufacturer();
     		case Name:				return obj.getName();
-    		case SerializedLocation:return obj.getSerializedLocation();
     		default: 				return getProperty((IAnnotatableEntityBase)obj, prop);
 			default: return getCollection((IAnnotatableEntityBase)obj, col);
 		}
@@ -394,7 +382,6 @@ EXPERIMENT links - [
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));		- EntityBase has this, but not IEntityBase
 		//EXTERNAL_DEVICE links - [ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Owner,title=Owner,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/Owner], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Experiment,title=Experiment,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/Experiment], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Tags,title=Tags,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/Tags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotations,title=MyAnnotations,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/MyAnnotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyProperties,title=MyProperties,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/MyProperties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ResourceNames,title=ResourceNames,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/ResourceNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyKeywordTags,title=MyKeywordTags,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/MyKeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnnotationGroupTags,title=AnnotationGroupTags,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/AnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyTags,title=MyTags,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/MyTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/KeywordTags,title=KeywordTags,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/KeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Annotations,title=Annotations,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/Annotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotationGroupTags,title=MyAnnotationGroupTags,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/MyAnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Resources,title=Resources,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/Resources], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Properties,title=Properties,href=ExternalDevices('79fe17ea-c63d-4563-8022-a5345a5e76f0')/Properties]]		
 		Assert.assertEquals(msg, fromDb.getName(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"Name"));
@@ -406,7 +393,6 @@ EXPERIMENT links - [
 		
 		//PROJECT links - [ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Owner,title=Owner,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/Owner], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Experiments,title=Experiments,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/Experiments], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ResourceNames,title=ResourceNames,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/ResourceNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnalysisRecords,title=AnalysisRecords,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/AnalysisRecords], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyTags,title=MyTags,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/MyTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnalysisRecordNames,title=MyAnalysisRecordNames,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/MyAnalysisRecordNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotationGroupTags,title=MyAnnotationGroupTags,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/MyAnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Properties,title=Properties,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/Properties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotations,title=MyAnnotations,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/MyAnnotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Tags,title=Tags,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/Tags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyProperties,title=MyProperties,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/MyProperties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyKeywordTags,title=MyKeywordTags,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/MyKeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnnotationGroupTags,title=AnnotationGroupTags,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/AnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnalysisRecords,title=MyAnalysisRecords,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/MyAnalysisRecords], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnalysisRecordNames,title=AnalysisRecordNames,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/AnalysisRecordNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Annotations,title=Annotations,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/Annotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/KeywordTags,title=KeywordTags,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/KeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Resources,title=Resources,href=Projects('9184e918-c69c-4c75-a4b7-6a195ce0986a')/Resources]]
 		Assert.assertEquals(msg, fromDb.getName(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"Name"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 		Assert.assertEquals(msg, fromDb.getNotes(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Notes"));
 		Assert.assertEquals(msg, fromDb.getPurpose(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Purpose"));
 		
@@ -414,7 +400,6 @@ EXPERIMENT links - [
     protected static Object getProperty(Project obj, PropertyName prop) {
     	switch (prop) {
 	    	case Name:					return obj.getName();
-	    	case SerializedLocation:	return obj.getSerializedLocation();
 	    	case Notes:					return obj.getNotes();		// 2 different interfaces so easier to just handle it here (for now)
 	    	case Purpose: 				return obj.getPurpose();
 	    	default: 					return getProperty((ITimelineElement)obj, prop); 
@@ -458,7 +443,6 @@ EXPERIMENT links - [
     protected static Object getProperty(Response obj, PropertyName prop) {
     	switch (prop) {
     		case Epoch:				return obj.getEpoch();
-    		case SerializedLocation:return obj.getSerializedLocation();
     		case UTI:				return obj.getUTI();
     		default: 				return getProperty((IResponseDataBase)obj, prop);
 			case SamplingRates:	return CollectionUtils.makeIterable(obj.getSamplingRates());
@@ -472,7 +456,6 @@ EXPERIMENT links - [
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc,	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));
 		
 		Assert.assertEquals(msg, fromDb.getUnits(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Units"));
@@ -630,7 +613,6 @@ ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/r
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));
 // SOURCE links - [ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Owner,title=Owner,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/Owner], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ParentRoot,title=ParentRoot,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/ParentRoot], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ParentSource,title=ParentSource,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/ParentSource], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Experiments,title=Experiments,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/Experiments], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ResourceNames,title=ResourceNames,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/ResourceNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/EpochGroups,title=EpochGroups,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/EpochGroups], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/SourceChildren,title=SourceChildren,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/SourceChildren], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyTags,title=MyTags,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/MyTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ChildLeafSourceDescendants,title=ChildLeafSourceDescendants,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/ChildLeafSourceDescendants], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotationGroupTags,title=MyAnnotationGroupTags,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/MyAnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Properties,title=Properties,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/Properties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Tags,title=Tags,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/Tags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotations,title=MyAnnotations,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/MyAnnotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyProperties,title=MyProperties,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/MyProperties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AllEpochGroups,title=AllEpochGroups,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/AllEpochGroups], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyKeywordTags,title=MyKeywordTags,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/MyKeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AllExperiments,title=AllExperiments,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/AllExperiments], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnnotationGroupTags,title=AnnotationGroupTags,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/AnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Annotations,title=Annotations,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/Annotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/KeywordTags,title=KeywordTags,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/KeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Resources,title=Resources,href=Sources('c47bcd1c-e863-46ea-a674-ab21fe9a6348')/Resources]]		
 		Assert.assertEquals(msg, fromDb.getLabel(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Label"));
@@ -641,7 +623,6 @@ ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/r
     		case Label:				return obj.getLabel();
     		case ParentSource: 		return obj.getParent();
     		case ParentRoot: 		return obj.getParentRoot();
-    		case SerializedLocation:return obj.getSerializedLocation();
     		default: 				return getProperty((IAnnotatableEntityBase)obj, prop);
 			case AllEpochGroups: 			return CollectionUtils.makeIterable(obj.getAllEpochGroups());
 			case AllExperiments: 			return CollectionUtils.makeIterable(obj.getAllExperiments());
@@ -662,7 +643,6 @@ ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/r
     	switch (prop) {
     		case Epoch:				return obj.getEpoch();
     		case PluginID:			return obj.getPluginID();
-    		case SerializedLocation:return obj.getSerializedLocation();
     		default: 				return getProperty((IIOBase)obj, prop);
 			case StimulusParameters: 	return Property.makeIterable(obj.getStimulusParameters());
 			default: 					return getCollection((IIOBase)obj, col);
@@ -674,7 +654,6 @@ ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/r
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));
 // STIMULUS links - [ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Owner,title=Owner,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/Owner], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ExternalDevice,title=ExternalDevice,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/ExternalDevice], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Epoch,title=Epoch,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/Epoch], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ResourceNames,title=ResourceNames,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/ResourceNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/DeviceParameters,title=DeviceParameters,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/DeviceParameters], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyTags,title=MyTags,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/MyTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotationGroupTags,title=MyAnnotationGroupTags,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/MyAnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Properties,title=Properties,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/Properties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotations,title=MyAnnotations,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/MyAnnotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Tags,title=Tags,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/Tags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyProperties,title=MyProperties,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/MyProperties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyKeywordTags,title=MyKeywordTags,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/MyKeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/StimulusParameters,title=StimulusParameters,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/StimulusParameters], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnnotationGroupTags,title=AnnotationGroupTags,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/AnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/DimensionLabels,title=DimensionLabels,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/DimensionLabels], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Annotations,title=Annotations,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/Annotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/KeywordTags,title=KeywordTags,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/KeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Resources,title=Resources,href=Stimuli('4685068c-0a84-4012-8fbf-0b5921eb4650')/Resources]]		
 		Assert.assertEquals(msg, fromDb.getUnits(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Units"));
@@ -687,7 +666,6 @@ ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/r
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-		Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));
 		
 		Assert.assertEquals(msg, fromDb.getNotes(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Notes"));
@@ -710,7 +688,6 @@ ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/r
 		Assert.assertEquals(msg, fromDb.getURIString(), 		OData4JClientUtils.getStringProperty(fromSvc, 	"URI"));
 		Assert.assertEquals(msg, fromDb.getUuid(), 				OData4JClientUtils.getStringProperty(fromSvc, 	"UUID"));
 		JUnitUtils.assertEquals(msg, fromDb.isIncomplete(), 	OData4JClientUtils.getBooleanProperty(fromSvc,	"IsIncomplete"));
-	//	Assert.assertEquals(msg, fromDb.getSerializedLocation(),OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedLocation"));	- EntityBase has this, but not IEntityBase (but AnalysisRecord does)
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));		- EntityBase has this, but not IEntityBase
 
 /*
