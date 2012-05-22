@@ -6,6 +6,12 @@ import java.util.Set;
 import junit.framework.Assert;
 
 import org.core4j.Enumerable;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeField;
+import org.joda.time.DateTimeZone;
+import org.joda.time.LocalDateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatterBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -25,7 +31,6 @@ import ovation.ExternalDevice;
 import ovation.IAnnotation;
 import ovation.ITaggableEntityBase;
 import ovation.KeywordTag;
-import ovation.NumericDataType;
 import ovation.Project;
 import ovation.Resource;
 import ovation.Response;
@@ -73,10 +78,12 @@ public class BasicGetTest {
 	// TODO can probably be moved to OvationJUnitUtils or similar ovation-specific util class
 	static enum Entity {
 		EXPERIMENT("Experiments", 			Experiment.class), 
+        USER("Users",                       User.class),
 		EPOCH_GROUP("EpochGroups", 			EpochGroup.class),
 		ANALYSIS_RECORD("AnalysisRecords", 	AnalysisRecord.class), 
 		RESPONSE("Responses", 				Response.class),
-		EXTERNAL_DEVICE("ExternalDevices", 	ExternalDevice.class), 
+		EXTERNAL_DEVICE("ExternalDevices", 	ExternalDevice.class),
+		
 		SOURCE("Sources", 					Source.class),
 		DERIVED_RESPONSE("DerivedResponses",DerivedResponse.class), 
 		PROJECT("Projects", 				Project.class),
@@ -85,8 +92,7 @@ public class BasicGetTest {
 		KEYWORD_TAG("KeywordTags", 			KeywordTag.class), 
 		EPOCH("Epochs", 					Epoch.class),
 		RESOURCE("Resources", 				Resource.class),
-		USER("Users",						User.class),
-		
+
 		_STRING("_Strings",              	String.class),
 		_DOUBLE("_Doubles",                 Double.class),
 		_FLOAT("_Floats",                 	Float.class),
@@ -97,7 +103,6 @@ public class BasicGetTest {
 		_ANNOTATION("_Annotations",			IAnnotation.class),
 		
 		_TaggableEntityBase("_ITaggableEntityBases",ITaggableEntityBase.class),
-		_NumericDataTypes("_NumericDataTypes",		NumericDataType.class),
 		;
 
 		private final String 	_setName;
@@ -119,6 +124,25 @@ public class BasicGetTest {
 	static Enumerable<OEntity> 	getSubEntities(OEntity root, String name) 	{ return OData4JClientUtils.getSubEntities(_odataClient, root, name); }
 	static <T> List<T> 			getAllFromDB(Class<T> type) 				{ return OvationUtils.getAllFromDB(_dbContext, type); }
 	static <T> T 				getFromDB(String uri) 						{ return OvationUtils.getFromDB(_dbContext, uri); }
+	
+	@Test
+	public void testJoda() throws Throwable {
+	    DateTime       dt = new DateTime(DateTimeZone.getDefault());
+        LocalDateTime ldt = dt != null ? new LocalDateTime(dt, DateTimeZone.UTC) : null;    // convert to UTC
+        
+        System.out.println(dt + " -> " + ldt);
+        dt = ldt.toDateTime(DateTimeZone.UTC);
+        System.out.println(ldt + " -> " + dt);
+        dt = dt.toDateTime(DateTimeZone.getDefault());
+        System.out.println(ldt + " -> " + dt);
+/*        
+        System.out.println(ldt.toString(DateTimeFormat.longDateTime()));
+        ldt = new LocalDateTime(dt.getMillis(), DateTimeZone.UTC);
+        System.out.println(ldt.toString(DateTimeFormat.longDateTime()));
+        dt = ldt.toDateTime(zone);
+        System.out.println(dt);
+*/        
+	}
 	
 	/**
 	 * assert that the server recognizes all entity types we expect it to recognize
