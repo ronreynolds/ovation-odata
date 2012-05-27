@@ -27,7 +27,7 @@ import com.google.common.collect.Maps;
  * @param <V> Value type - the type this model is about
  */
 public abstract class ExtendedPropertyModel<V> implements PropertyModel {
-    public static final Logger _log = Logger.getLogger(ExtendedPropertyModel.class);
+    protected static final Logger _log = Logger.getLogger(ExtendedPropertyModel.class);
 
     /** allows us to attach the QueryInfo to the handling thread so we don't have to pass it around everywhere */
     private static final ThreadLocal<QueryInfo> _threadQueryInfo = new ThreadLocal<QueryInfo>();
@@ -49,7 +49,7 @@ public abstract class ExtendedPropertyModel<V> implements PropertyModel {
     /** @return the type of the specified collection within the associated entity type */
     public Class<?> getCollectionElementType(String collectionName) {
         if (_collectionTypes.containsKey(collectionName) == false) {
-            _log.error("Unrecognized collection - " + collectionName);
+            _log.error(this + ": Unrecognized collection - " + collectionName);
         }
         return _collectionTypes.get(collectionName); 
     }
