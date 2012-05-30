@@ -53,8 +53,8 @@ import com.google.common.collect.Sets;
  */
 public class BasicGetTest {
 	static final String SERVICE_URL 	= System.getProperty("ovodataUrl",      "http://localhost:8080/ovodata/Ovodata.svc/");
-	static final String USERNAME 		= System.getProperty("ovationUser", 	"ron");
-	static final String PASSWORD 		= System.getProperty("ovationPassword", "passpass1");
+	static final String USERNAME 		= System.getProperty("ovationUser", 	"user");
+	static final String PASSWORD 		= System.getProperty("ovationPassword", "password");
 	static final String DB_CON_FILE		= System.getProperty("ovationDbFile",   "/var/lib/ovation/db/dev.connection");
 	
 	private static ODataConsumer 	_odataClient; 
@@ -161,6 +161,8 @@ public class BasicGetTest {
 	static <T> void assertEquals(Entity type, List<T> allFromDb, Enumerable<OEntity> allFromService) {
 		// assert that the count returned by the DB match the count returned by the service
 		// and that every element from the service matches the same element in the DB
+        Assert.assertNotNull("DB returned null list", allFromDb);
+        Assert.assertNotNull("Svc returned null list", allFromService);
 		Assert.assertEquals(allFromDb.size(), allFromService.count());
 		boolean first = true;
 		for (OEntity entity : allFromService) {
@@ -182,6 +184,7 @@ public class BasicGetTest {
 		Entity 				type 			= Entity.EPOCH_GROUP;
 		List<EpochGroup> 	allFromDb 		= getAllFromDB(EpochGroup.class);	
 		Enumerable<OEntity> allFromService 	= getAllEntities(type);
+System.out.println("allFromSvc - " + allFromService);
 		assertEquals(type, allFromDb, allFromService);
 	}
 
