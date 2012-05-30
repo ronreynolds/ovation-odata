@@ -5,8 +5,6 @@ import java.util.Iterator;
 import java.util.Map;
 
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDateTime;
 import org.odata4j.core.OEntityKey;
 import org.odata4j.producer.QueryInfo;
 
@@ -91,7 +89,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     
     /** every property of every child-type - ensures consistent naming and also makes common util functions doable */
     protected enum PropertyName implements NameEnum {
-        Owner(User.class), URI(String.class), UUID(String.class), IsIncomplete(Boolean.class),				// EntityBase
+        Owner(String.class), URI(String.class), UUID(String.class), IsIncomplete(Boolean.class),			// EntityBase
         Tag(String.class),	 																				// KeywordTag 
         																									// TaggableEntityBase 
         																									// AnnotatableEntityBase 
@@ -106,7 +104,8 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
         																									// ResponseDataBase 	
         																									// Response + Epoch(ovation.Epoch.class), SerializedLocation(String.class), UTI(String.class), 										 			
         Description(String.class), 																			// DerivedResponse + Epoch(Epoch.class), Name(String.class), SerializedLocation(String.class), 			 		
-        EndTime(LocalDateTime.class), StartTime(LocalDateTime.class), 										// TimelineElement 		
+        EndTime(DateTime.class), StartTime(DateTime.class),                                                 // TimelineElement      
+
         EpochCount(Integer.class), ParentEpochGroup(EpochGroup.class), Source(Source.class),				// EpochGroup + Experiment(ovation.Experiment.class), Label(String.class), SerializedLocation(String.class),   			
         Duration(Double.class), EpochGroup(EpochGroup.class), ExcludeFromAnalysis(Boolean.class), 
         NextEpoch(Epoch.class), PreviousEpoch(Epoch.class), ProtocolID(String.class),						// Epoch + SerializedLocation(String.class)
@@ -370,7 +369,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     // IEntityBase extends IooObj
     protected static Object getProperty(IEntityBase obj, PropertyName prop) {
     	switch (prop) {
-    		case Owner:			return obj.getOwner();
+    		case Owner:			return (obj.getOwner() != null ? obj.getOwner().getUsername() : null);
     		case URI:			return obj.getURIString();	// always return String version - URI version just confuses odata4j
     		case UUID:			return obj.getUuid();
     		case IsIncomplete:	return obj.isIncomplete();
@@ -384,7 +383,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
 			case Properties:	return Property.makeIterable(obj.getProperties());
 			case ResourceNames:	return CollectionUtils.makeIterable(obj.getResourceNames());
 			case Resources:		return obj.getResourcesIterable();  
-			default: 			_log.error("Unknown collection '" + col + "' for type '" + obj + "'"); return CollectionUtils.makeEmptyIterable();	// nowhere to go from here
+			default:            _log.error("Unknown collection '" + col + "' for type '" + obj + "'"); return null;
 		}
     }
     
@@ -529,7 +528,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     }
     protected static Iterable<?> getCollection(IIOBase obj, CollectionName col) {
     	switch (col) {
-			case DeviceParameters: 	return CollectionUtils.makeIterable(obj.getDeviceParameters());
+			case DeviceParameters: 	return Property.makeIterable(obj.getDeviceParameters());
 			case DimensionLabels:	return CollectionUtils.makeEmptyIterable();//  obj.getDimensionLabels();	// FIXME - add to IIOBase
 			default: return getCollection((IAnnotatableEntityBase)obj, col);
 		}
@@ -545,7 +544,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     }
     protected static Iterable<?> getCollection(Stimulus obj, CollectionName col) {
     	switch (col) {
-			case StimulusParameters: 	return CollectionUtils.makeIterable(obj.getStimulusParameters());
+			case StimulusParameters:    return Property.makeIterable(obj.getStimulusParameters());
 			case DimensionLabels:		return CollectionUtils.makeIterable(obj.getDimensionLabels());	// FIXME - add to IIOBase
 			default: 					return getCollection((IIOBase)obj, col);
 		}
@@ -564,7 +563,6 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     	
     	try {
 	    	switch (prop) {
-//	    		case Data:				return res != null ? res.getDataBytes() 		: dRes.getDataBytes();
 		    	case ByteOrder:			return String.valueOf(data.getByteOrder());
 		    	case NumericDataFormat:	return String.valueOf(data.getDataFormat());
 		    	case NumericByteOrder:	return String.valueOf(data.getNumericByteOrder());
@@ -636,8 +634,8 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     // ITimelineElement extends IooObj, IEntityBase, ITaggableEntityBase, IAnnotatableEntityBase 
     protected static Object getProperty(ITimelineElement obj, PropertyName prop) {
     	switch (prop) {
-			case EndTime:	return convertDateTime(obj.getEndTime());
-			case StartTime:	return convertDateTime(obj.getStartTime());
+			case EndTime:	return obj.getEndTime();
+			case StartTime:	return obj.getStartTime();
    			default: 		return getProperty((IAnnotatableEntityBase)obj, prop); 
     	}
     }
@@ -807,9 +805,5 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     	return DataContextCache.getThreadContext().objectWithURI(uri);
     }
 
-	public static LocalDateTime 	convertDateTime(DateTime dt) 	{
-	    if (dt == null) return null;
-        return new LocalDateTime(dt, DateTimeZone.UTC);    // convert to UTC for xfer
-	}
 	public static String 			convertURLToString(URL url) 	{ return url != null ? url.toExternalForm() : null; }
 }
