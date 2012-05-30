@@ -61,9 +61,9 @@ public class OData4JClientUtils {
 	}	
 	
 */	
-	public static DateTime getDateTimeProperty(OEntity entity, String name) { 
-		OProperty<LocalDateTime> prop = entity.getProperty(name, LocalDateTime.class);
-		return prop != null && prop.getValue() != null ? prop.getValue().toDateTime(DateTimeZone.UTC) : null; 
+	public static DateTime getDateTimeProperty(OEntity entity, String name) {
+	    OProperty<DateTime> prop = entity.getProperty(name, DateTime.class);
+	    return prop != null && prop.getValue() != null ? prop.getValue() : null; 
 	}
 	public static Integer  getIntegerProperty(OEntity entity, String name) { 
 		OProperty<Integer> prop = entity.getProperty(name, Integer.class);
@@ -85,6 +85,10 @@ public class OData4JClientUtils {
 		OProperty<Boolean> prop = entity.getProperty(name, Boolean.class);
 		return prop != null ? prop.getValue() : null; 
 	}	
+    public static <T> T getObjectProperty(OEntity entity, String name) { 
+        OProperty<?> prop = entity.getProperty(name);
+        return prop != null ? (T) prop.getValue() : null; 
+    }   
 	
 	public static OEntity getEntity(ODataConsumer client, String setName, String entityId) {
 		OEntityGetRequest<OEntity> req = client.getEntity(setName, OEntityKey.create(entityId));
