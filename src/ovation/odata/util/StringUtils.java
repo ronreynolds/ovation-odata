@@ -17,8 +17,20 @@ public class StringUtils {
 				Object elem = Array.get(o, x);
 				buf.append(',').append(toString(elem));
 			}
-			return "[" + buf.substring(1).toString() + "]";
+	        String s = buf.toString();
+	        return "[" + (s.length() > 1 ? s.substring(1) : "<empty>") + "]";
 		}
+		
 		return String.valueOf(o);
 	}
+	
+	public static <T> String toString(Iterable<T> iter) {
+	    StringBuilder buf = new StringBuilder();
+	    for (T t : iter) {
+            buf.append(',').append(toString(t));
+	    }
+	    String s = buf.toString();
+        return "[" + (s.length() > 1 ? s.substring(1) : "<empty>") + "]";
+	}
+	
 }
