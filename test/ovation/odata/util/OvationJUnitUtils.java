@@ -1,6 +1,8 @@
 package ovation.odata.util;
 
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,6 +11,8 @@ import junit.framework.Assert;
 import org.core4j.Enumerable;
 import org.odata4j.consumer.ODataConsumer;
 import org.odata4j.core.OEntity;
+
+import com.google.common.collect.Lists;
 
 import ovation.AnalysisRecord;
 import ovation.DataContext;
@@ -102,8 +106,8 @@ public class OvationJUnitUtils {
 	
 	public static void assertEquals(String msg, ITimelineElement fromDb, OEntity fromSvc, ODataConsumer svc, DataContext db) {
 		assertEquals(msg, (IAnnotatableEntityBase)fromDb, fromSvc, svc, db);
-		Assert.assertEquals(msg, fromDb.getStartTime(),	OData4JClientUtils.getDateTimeProperty(fromSvc, "StartTime"));
-		Assert.assertEquals(msg, fromDb.getEndTime(), 	OData4JClientUtils.getDateTimeProperty(fromSvc, "EndTime"));
+		JUnitUtils.assertEquals(msg, fromDb.getStartTime(),   OData4JClientUtils.getDateTimeProperty(fromSvc, "StartTime"));
+		JUnitUtils.assertEquals(msg, fromDb.getEndTime(),     OData4JClientUtils.getDateTimeProperty(fromSvc, "EndTime"));
 	}
 	
 	// TaggableEntityBase extends EntityBase implements ITaggableEntityBase
@@ -247,8 +251,8 @@ EXPERIMENT links - [
 	//	Assert.assertEquals(msg, fromDb.getSerializedName(),	OData4JClientUtils.getStringProperty(fromSvc, 	"SerializedName"));
 		
 		Assert.assertEquals(msg, fromDb.getNotes(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Notes"));
-		Assert.assertEquals(msg, fromDb.getStartTime(), 		OData4JClientUtils.getDateTimeProperty(fromSvc, "StartTime"));
-		Assert.assertEquals(msg, fromDb.getEndTime(), 			OData4JClientUtils.getDateTimeProperty(fromSvc, "EndTime"));
+		JUnitUtils.assertEquals(msg, fromDb.getStartTime(),     OData4JClientUtils.getDateTimeProperty(fromSvc, "StartTime"));
+		JUnitUtils.assertEquals(msg, fromDb.getEndTime(), 		OData4JClientUtils.getDateTimeProperty(fromSvc, "EndTime"));
 		Assert.assertEquals(msg, fromDb.getPurpose(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Purpose"));
 	}
 	
@@ -360,8 +364,8 @@ EXPERIMENT links - [
 // EPOCH_GROUP links - [ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Source,title=Source,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Source], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Owner,title=Owner,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Owner], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ParentEpochGroup,title=ParentEpochGroup,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/ParentEpochGroup], ORelatedEntityLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Experiment,title=Experiment,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Experiment], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ResourceNames,title=ResourceNames,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/ResourceNames], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyTags,title=MyTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotationGroupTags,title=MyAnnotationGroupTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyAnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Properties,title=Properties,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Properties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyAnnotations,title=MyAnnotations,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyAnnotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Tags,title=Tags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Tags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyProperties,title=MyProperties,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyProperties], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/MyKeywordTags,title=MyKeywordTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/MyKeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/AnnotationGroupTags,title=AnnotationGroupTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/AnnotationGroupTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/GroupChildren,title=GroupChildren,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/GroupChildren], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Annotations,title=Annotations,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Annotations], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/KeywordTags,title=KeywordTags,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/KeywordTags], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Epochs,title=Epochs,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Epochs], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/EpochsUnsorted,title=EpochsUnsorted,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/EpochsUnsorted], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/Resources,title=Resources,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/Resources], ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/related/ChildLeafGroupDescendants,title=ChildLeafGroupDescendants,href=EpochGroups('0502c24a-1d3c-4d27-9a63-376cd3bdc3ec')/ChildLeafGroupDescendants]]
 		Assert.assertEquals(msg, fromDb.getEpochCount(),		OData4JClientUtils.getIntegerProperty(fromSvc, 	"EpochCount", -1));
 		Assert.assertEquals(msg, fromDb.getLabel(), 			OData4JClientUtils.getStringProperty(fromSvc, 	"Label"));
-		JUnitUtils.assertEquals(msg, fromDb.getStartTime(), 		OData4JClientUtils.getDateTimeProperty(fromSvc, "StartTime"));
-		JUnitUtils.assertEquals(msg, fromDb.getEndTime(), 			OData4JClientUtils.getDateTimeProperty(fromSvc, "EndTime"));
+		JUnitUtils.assertEquals(msg, fromDb.getStartTime(), 	OData4JClientUtils.getDateTimeProperty(fromSvc, "StartTime"));
+		JUnitUtils.assertEquals(msg, fromDb.getEndTime(), 		OData4JClientUtils.getDateTimeProperty(fromSvc, "EndTime"));
 	}
 
 	public static void assertEquals(String msg, ExternalDevice fromDb, OEntity fromSvc, ODataConsumer svc, DataContext db) {
@@ -724,20 +728,35 @@ ORelatedEntitiesLink[rel=http://schemas.microsoft.com/ado/2007/08/dataservices/r
 	static <K,V> void assertEquals(String msg, Enumerable<OEntity> fromSvc, Map<K,V> fromDb) {
 		Assert.assertNotNull(msg, fromDb);
 		Assert.assertNotNull(msg, fromSvc);
-		Assert.assertEquals(fromDb.size(), fromSvc.count());
+		Assert.assertEquals(msg + "-" + fromDb, fromDb.size(), fromSvc.count());
 		for (Iterator<OEntity> iter = fromSvc.iterator(); iter.hasNext(); ) {
 			OEntity nameEntity = iter.next();
 //			System.out.println(nameEntity);
+            // TODO assert ... what?
 		}
 
+	}
+	
+	static <T> void assertEquals(String msg, Enumerable<OEntity> fromSvc, Iterable<T> fromDb) {
+        Assert.assertNotNull(msg, fromDb);
+        Assert.assertNotNull(msg, fromSvc);
+        List<T> fromDbList = Lists.newArrayList();
+        for (T t : fromDb) {
+            fromDbList.add(t);
+        }
+        Assert.assertEquals(msg + "-" + fromDbList, fromDbList.size(), fromSvc.count());
+
+        // FIXME - asserting more at this point is tricky since do we want the results from the svc to EXACTLY match in order as well as content?  probably not, so instead each has to be
+        //  sorted by UID or something comparable - asserting contents is then easier...  will have to think on this more.
 	}
 	
 	static <T> void assertEquals(String msg, Enumerable<OEntity> fromSvc, T... fromDb) {
 		Assert.assertNotNull(msg, fromDb);
 		Assert.assertNotNull(msg, fromSvc);
-		Assert.assertEquals(fromDb.length, fromSvc.count());
+		Assert.assertEquals(msg + "-" + Arrays.toString(fromDb), fromDb.length, fromSvc.count());
 		for (Iterator<OEntity> iter = fromSvc.iterator(); iter.hasNext(); ) {
 			OEntity nameEntity = iter.next();
+			// TODO assert ... what?
 //			System.out.println(nameEntity);
 		}
 
