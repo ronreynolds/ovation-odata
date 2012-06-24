@@ -14,12 +14,12 @@
     <property name="war.release.root"   value="ROOT.war"/>
     <property name="guava.jar.path"     value="${dir.lib}/guava-r09.jar"/>
     <property name="odata4j.jar.path"   value="${dir.lib}/odata4j-0.6.0-bundle.jar"/>
-    <property name="ovation.jar.path"   value="${dir.lib}/ovation-1.1.jar"/>
+    <property name="ovation.jar.path"   value="${dir.lib}/ovation-1.2.jar"/>
     
     <fileset id="set.jars" dir="${dir.lib}">
         <include name="guava-r09.jar" />
         <include name="odata4j-0.6.0-bundle.jar" />
-        <include name="ovation-1.1.jar" />
+        <include name="ovation-1.2.jar" />
     </fileset>
     
     <target name="all" depends="clean, war" description="clean build of source, jar and war">
