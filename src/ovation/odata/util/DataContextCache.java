@@ -6,7 +6,6 @@ import org.apache.log4j.Logger;
 
 import ovation.DataContext;
 import ovation.DataStoreCoordinator;
-import ovation.Ovation;
 import ovation.OvationException;
 import ovation.UserAuthenticationException;
 
