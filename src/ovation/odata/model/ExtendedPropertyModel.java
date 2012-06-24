@@ -94,7 +94,9 @@ public abstract class ExtendedPropertyModel<V> implements PropertyModel {
     public abstract String 		getTypeName();
     /** @return the value associated with the key */
     public V 					getEntityByKey(OEntityKey key) { return null; }
-
+    /** @return if the model should have a media-stream in its metadata */
+    public boolean              hasStream() { return false; }
+    
     // to be called from sub-class' ctor
     protected void setAllGetter(Func<Iterable<V>> allGetter) 	{ _allGetter = allGetter; }
     protected void setIdGetter(Func1<V,String> idGetter)		{ _idGetter = idGetter; }
