@@ -19,6 +19,7 @@ import org.odata4j.consumer.ODataConsumer;
 import org.odata4j.consumer.behaviors.OClientBehaviors;
 import org.odata4j.core.EntitySetInfo;
 import org.odata4j.core.OEntity;
+import org.odata4j.core.OObject;
 import org.odata4j.jersey.consumer.ODataJerseyConsumer;
 
 import ovation.AnalysisRecord;
@@ -184,7 +185,7 @@ public class BasicGetTest {
 		Entity 				type 			= Entity.EPOCH_GROUP;
 		List<EpochGroup> 	allFromDb 		= getAllFromDB(EpochGroup.class);	
 		Enumerable<OEntity> allFromService 	= getAllEntities(type);
-System.out.println("allFromSvc - " + allFromService);
+//System.out.println("allFromSvc - " + allFromService);
 		assertEquals(type, allFromDb, allFromService);
 	}
 
@@ -285,6 +286,11 @@ System.out.println("allFromSvc - " + allFromService);
 		assertEquals(type, allFromDb, allFromService);
 	}
 	
+	@Test
+	public void testQuery() throws Throwable {
+	    Enumerable<OObject> e = _odataClient.callFunction("Query").pString("entity", "Experiement").pString("pql", "true").execute();
+	    System.out.println(e); // TODO
+	}
 	/**
 	 * compare top-level entities to each other - actual comparison handled by OvationJUnitUtils methods
 	 * DB entry is retrieved by using the URI in the OData4J entity
