@@ -24,33 +24,29 @@ public class AnalysisRecordModel extends OvationModelBase<AnalysisRecord> {
 		addAnalysisRecord(_propertyTypeMap, _collectionTypeMap);
 	}
 	
-	public AnalysisRecordModel() { super(_propertyTypeMap, _collectionTypeMap); }
+	public AnalysisRecordModel() { 
+	    super(_propertyTypeMap, _collectionTypeMap);
+	    setAllGetter(new Func<Iterable<AnalysisRecord>>() { 
+            public Iterable<AnalysisRecord> apply() { 
+                final Iterable<AnalysisRecord> queryIter = executeQueryInfo();
+                if (queryIter != null) {
+                    return queryIter;
+                }
+                return executeQuery(GET_ALL_PQL); 
+            } 
+        });
+	    setIdGetter(new Func1<AnalysisRecord,String>() {
+            public String apply(AnalysisRecord record) {
+                return record.getUuid();
+            }       
+        });
+	}
 
-	public String entityName() 	{ return "AnalysisRecords"; }
-	public String getTypeName()	{ return "AnalysisRecord"; }
+	public String                  entityName() 	{ return "AnalysisRecords"; }
+	public String                  getTypeName()	{ return "AnalysisRecord"; }
+    public Class<AnalysisRecord>   getEntityType()  { return AnalysisRecord.class;  }
 
 	public Iterable<?> 	getCollectionValue(Object target, String collectionName) 	{ return getCollection((AnalysisRecord)target, CollectionName.valueOf(collectionName));	}
 	public Object 		getPropertyValue(Object target, String propertyName)		{ return getProperty((AnalysisRecord)target, PropertyName.valueOf(propertyName)); }
 
-	public Class<AnalysisRecord> 	getEntityType() { return AnalysisRecord.class;	}
-
-	public Func<Iterable<AnalysisRecord>> allGetter() {
-		return new Func<Iterable<AnalysisRecord>>() { 
-			public Iterable<AnalysisRecord> apply() { 
-				final Iterable<AnalysisRecord> queryIter = executeQueryInfo();
-				if (queryIter != null) {
-					return queryIter;
-				}
-				return executeQuery(GET_ALL_PQL); 
-			} 
-		};
-	}
-
-	public Func1<AnalysisRecord,String> idGetter() {
-		return new Func1<AnalysisRecord,String>() {
-			public String apply(AnalysisRecord record) {
-				return record.getUuid();
-			}		
-		};
-	}
 }
