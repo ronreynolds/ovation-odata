@@ -2,8 +2,6 @@ package ovation.odata.util;
 
 import org.core4j.Enumerable;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDateTime;
 import org.odata4j.consumer.ODataConsumer;
 import org.odata4j.core.OEntity;
 import org.odata4j.core.OEntityGetRequest;
@@ -85,6 +83,7 @@ public class OData4JClientUtils {
 		OProperty<Boolean> prop = entity.getProperty(name, Boolean.class);
 		return prop != null ? prop.getValue() : null; 
 	}	
+    @SuppressWarnings("unchecked")
     public static <T> T getObjectProperty(OEntity entity, String name) { 
         OProperty<?> prop = entity.getProperty(name);
         return prop != null ? (T) prop.getValue() : null; 
