@@ -9,18 +9,25 @@ import org.odata4j.core.OEntityKey;
 import org.odata4j.producer.QueryInfo;
 
 import ovation.AnalysisRecord;
+import ovation.CoordinateSystem;
 import ovation.DerivedResponse;
 import ovation.Epoch;
 import ovation.EpochGroup;
 import ovation.Experiment;
 import ovation.ExternalDevice;
+import ovation.Group;
 import ovation.IAnnotatableEntityBase;
 import ovation.IAnnotation;
 import ovation.IEntityBase;
 import ovation.IIOBase;
-import ovation.IResponseDataBase;
+import ovation.INoteAnnotation;
+import ovation.IResponseData;
+import ovation.IShape;
 import ovation.ITaggableEntityBase;
 import ovation.ITimelineElement;
+import ovation.ImageAnnotatable;
+import ovation.ImageAnnotation;
+import ovation.IndexedURLResponse;
 import ovation.KeywordTag;
 import ovation.NumericData;
 import ovation.NumericDataFormat;
@@ -29,7 +36,9 @@ import ovation.Resource;
 import ovation.Response;
 import ovation.Source;
 import ovation.Stimulus;
+import ovation.TimelineAnnotation;
 import ovation.URLResource;
+import ovation.URLResponse;
 import ovation.User;
 import ovation.odata.model.dao.PrimitiveCollectionModel;
 import ovation.odata.model.dao.Property;
@@ -65,6 +74,9 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
         ExtendedPropertyModel.addPropertyModel(new StimulusModel());
         ExtendedPropertyModel.addPropertyModel(new URLResourceModel());
         ExtendedPropertyModel.addPropertyModel(new UserModel());		
+        ExtendedPropertyModel.addPropertyModel(new CoordinateSystemModel());
+        ExtendedPropertyModel.addPropertyModel(new ShapeModel());
+        ExtendedPropertyModel.addPropertyModel(new GroupModel());
         
         // supporting types
         ExtendedPropertyModel.addPropertyModel(new StringModel());		// so we can return a collection of strings (they may have fixed this in odata4j 0.6)
@@ -82,14 +94,16 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     
     // note, these two enums feel like they could be expanded to also have the getters but doing so would take a 
     // fair amount of time (tho might result in a very nice expendable design...)
-
+    
     interface NameEnum {
         public Class<?> getType();
+// public Object getProperty(Object o) { return _getter.execute(o); }
+        // Func<T> _getter = new Func<T>() { public T execute(Object o) { return o.getThing(); } }; ...  pity it can't be bound to the Class<?> returned by getType()...
     }
     
     /** every property of every child-type - ensures consistent naming and also makes common util functions doable */
     protected enum PropertyName implements NameEnum {
-        Owner(String.class), URI(String.class), UUID(String.class), IsIncomplete(Boolean.class),			// EntityBase
+        URI(String.class), UUID(String.class), IsIncomplete(Boolean.class),Owner(User.class),               // EntityBase
         Tag(String.class),	 																				// KeywordTag 
         																									// TaggableEntityBase 
         																									// AnnotatableEntityBase 
@@ -114,20 +128,23 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
          																									// Project + Name(String.class), SerializedLocation(String.class)
         Username(String.class),																				// User
         Text(String.class),																					// IAnnotation
-        
-        
     	ByteOrder(String.class), NumericDataFormat(String.class), NumericByteOrder(String.class), SampleBytes(Short.class), // NumericDataType
+        CoordinateSystem(CoordinateSystem.class),                                                           // IShape
+        DataBytes(byte[].class),                                                                            // URLResponse
+        End(Long.class), Start(Long.class),                                                                 // IndexedURLResponse
+        Shape(IShape.class),                                                                                // ImageAnnotation
+        GroupName(String.class),                                                                            // Group
     	;
         
     	final Class<?> 	_type;
     	PropertyName(Class<?> type)	{ _type = type; }
 
-        public Class<?> getType() 				{ return _type; }
+        public Class<?> getType()   { return _type; }
     };
     
     /** every collection (association) of every child-type - ensures consistent naming */
     protected enum CollectionName implements NameEnum {
-        MyProperties(Property.class), Owner(User.class), Properties(Property.class), ResourceNames(String.class), Resources(Resource.class),		// EntityBase
+        MyProperties(Property.class), Properties(Property.class), ResourceNames(String.class), Resources(Resource.class),		// EntityBase
         Tagged(ITaggableEntityBase.class),																											// KeywordTag 			
         KeywordTags(KeywordTag.class), MyKeywordTags(KeywordTag.class), MyTags(String.class), Tags(String.class),									// TaggableEntityBase 
         AnnotationGroupTags(String.class), Annotations(IAnnotation.class), MyAnnotationGroupTags(String.class), MyAnnotations(IAnnotation.class),	// AnnotatableEntityBase
@@ -150,9 +167,11 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
         MyDerivedResponseNames(String.class), MyDerivedResponses(DerivedResponse.class), ProtocolParameters(Property.class), 
         Responses(Response.class), ResponseNames(String.class), StimuliNames(String.class), Stimuli(Stimulus.class),								// Epoch
         																																			// PurposeAndNotesEntity
-        ExternalDevices(ExternalDevice.class), Projects(Project.class), Sources(Source.class),	// Experiment + EpochGroups(EpochGroup.class), Epochs(Epoch.class), 
+        ExternalDevices(ExternalDevice.class), Projects(Project.class), Sources(Source.class),	                                                    // Experiment + EpochGroups(EpochGroup.class), Epochs(Epoch.class), 
         AnalysisRecordNames(String.class), MyAnalysisRecords(AnalysisRecord.class), MyAnalysisRecordNames(String.class), 							// Project + AnalysisRecords(AnalysisRecord.class), Experiments(Experiment.class),
     	Annotated(IAnnotatableEntityBase.class),																									// IAnnotation
+        ReferencePoint(Double.class), ScaleFactors(Double.class), Units(String.class),                                                              // CoordinateSystem
+        MyCoordinateSystems(CoordinateSystem.class), CoordinateSystems(CoordinateSystem.class)                                                      // ImageAnnotatable    
     	;
         
     	final Class<?> _type;
@@ -205,26 +224,45 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
      * 
      * * ooAbstractObj
      * ** ooObj
-     * *** EntityBase (MyProperties:<String,Object>[], Owner:User, Properties:<String,Object[]>[], ResourceNames:String[], Resources:Resource[], URI:String, UUID:String, IsComplete:bool)
+     * *** EntityBase [IEntityBase(IooObj)] (MyProperties:<String,Object>[], Owner:User, Properties:<String,Object[]>[], ResourceNames:String[], Resources:Resource[], URI:String, UUID:String, IsComplete:bool) (package-private)
+     * **** CoordinateSystem (Name:String, ReferencePoint:double[], ScaleFactors:double[], Units:String[]) - v1.2
      * **** KeywordTag (Tag:String, Tagged:TaggableEntityBase[])
-     * **** TaggableEntityBase (KeywordTags:KeywordTag[], MyKeywordTags:KeywordTag[], MyTags:String[], Tags:String[]) 
-     * ***** AnnotatableEntityBase (AnnotationGroupTags:String[], Annotations:IAnnotation[], MyAnnotationGroupTags:String[], MyAnnotations:IAnnotation[]) 
+     * **** Shape (no props or collections) - v1.2 (package-private)
+     * ***** Line (endX:double, endY:double, startX:double, startY:double) - v1.2
+     * ***** Oval (height:double, width:double, x:double, y:double) - v1.2
+     * ***** Point (coordinates:double[]) - v1.2
+     * ***** Polygon (xCoordinates:double[], yCoordinates:double[]) - v1.2
+     * **** TaggableEntityBase[ITaggableEntityBase(IooObj, IEntityBase)] (KeywordTags:KeywordTag[], MyKeywordTags:KeywordTag[], MyTags:String[], Tags:String[]) (package-private) 
+     * ***** AnnotatableEntityBase[IAnnotatableEntityBase(IooObj, IEntityBase, ITaggableEntityBase)] (AnnotationGroupTags:String[], Annotations:IAnnotation[], MyAnnotationGroupTags:String[], MyAnnotations:IAnnotation[])
      * ****** AnalysisRecord (AnalysisParameters:<String,Object>[], EntryFunctionName:String, Epochs:Epoch[], Name:String, Notes:String, Project:Project, ScmRevision:String, ScmURL:String, SerializedLocation:String)
      * ****** ExternalDevice (Experiment:Experiment, Manufacturer:String, Name:String, SerializedLocation:String)
-     * ****** Source (AllEpochGroups:EpochGroup[], AllExperiments:Experiment[], ChildLeafDescendants:Source[], Children:Source[], EpochGroups:EpochGroup[], Experiments:Experiment[], Label:String, Parent:Source, ParentRoot:Source, SerializedLocation:String)
-     * ****** Resource (Data:byte[], Name:String, Notes:String, Uti:String)
-     * ******* URLResource (URL:String)
-     * ****** IOBase (DeviceParameters:<String,Object>[], DimensionLabels:String[], ExternalDevice:ExternalDevice, Units:String)
-     * ******* Stimulus (Epoch:Epoch, PluginID:String, SerializedLocation:String, StimulusParameters:<String,Object>[])
-     * ******* ResponseDataBase (Data:NumericData, DataBytes:byte[], DoubleData:double[], FloatData:float[], FloatingPointData:double[], IntData:int[], IntegerData:int[], MatlabShape:long[], NumericDataType:NumericDataType, Shape:long[])
-     * ******** Response (Epoch:Epoch, SamplingRates:double[], SamplingUnits:String[], SerializedLocation:String, UTI:String)
+     * ****** IOBase[IIOBase(IAnnotatableEntityBase, IIOData), IIOData] (DeviceParameters:<String,Object>[], DimensionLabels:String[], ExternalDevice:ExternalDevice, Units:String) (package-private)
+     * ******* ResponseDataBase [IResponseData(IIOData), ImageAnnotatable(IAnnotatableEntityBase)] (Data:NumericData, DataBytes:byte[], DoubleData:double[], FloatData:float[], FloatingPointData:double[], IntData:int[], IntegerData:int[], MatlabShape:long[], NumericDataType:NumericDataType, Shape:long[])
      * ******** DerivedResponse (DerivationParameters:<String,Object>[], Description:String, Epoch:Epoch, Name:String, SerializedLocation:String)
-     * ****** TimelineElement (EndTime:DateTime, StartTime:DateTime)
-     * ******* EpochGroup (ChildLeafDescendants:EpochGroup[], Children:EpochGroup[], EpochCount:int, Epochs:Epoch[], EpochsUnsorted:Epoch[], Experiment:Experiement, Label:String, Parent:EpochGroup, SerializedLocation:String, Source:Source)
+     * ******** Response[Comparable<Response>, ImageAnnotatable] (Epoch:Epoch, SamplingRates:double[], SamplingUnits:String[], SerializedLocation:String, UTI:String)
+     * ********* URLResponse(data: NumericData, dataBytes:byte[], dataBytesStream:ByteArrayOutputStream, dataStream:InputStream, URL:URL, URLString:string) - v1.2
+     * ********** IndexedURLResponse(end:long, start:long) - v1.2
+     * ******* Stimulus[Comparable<Stimulus>] (Epoch:Epoch, PluginID:String, SerializedLocation:String, StimulusParameters:<String,Object>[])
+     * ****** Resource[ImageAnnotatable] (Data:byte[], Name:String, Notes:String, Uti:String)
+     * ******* URLResource (URL:String)
+     * ****** SavedQuery (expressionTree:ExpressionTree(not in our model), name:string, predicateString:String, resultType:string, serializedData:byte[], isSynchronizationQuery:boolean) - v1.2
+     * ******* SynchronizationQuery (active:boolean) - v1.2 (package-private)
+     * ****** Source[Comparable<Source>, SourceContainer(Iterable<Source> getSourcesWithLabel(String label))] (AllEpochGroups:EpochGroup[], AllExperiments:Experiment[], ChildLeafDescendants:Source[], Children:Source[], EpochGroups:EpochGroup[], Experiments:Experiment[], Label:String, Parent:Source, ParentRoot:Source, SerializedLocation:String)
+     * ****** TimelineElement[ITimelineElement] (EndTime:DateTime, StartTime:DateTime) (package-private)
      * ******* Epoch (AnalysisRecords:AnalysisRecord[], DerivedResponses:DerivedResponse[], DerivedResponseNames:String[], Duration:double, EpochGroup:EpochGroup, ExcludeFromAnalysis:bool, MyDerivedResponseNames:String[], MyDerivedResponses:DerivedResponse[], NextEpoch:Epoch, PreviousEpoch:Epoch, ProtocolID:String, ProtocolParameters:<String,Object>[], Responses:Response[], ResponseNames:String[], SerializedLocation:String, StimuliNames:String[], Stimuli:Stimulus[])
-     * ******* PurposeAndNotesEntity[IOwnerNotes,IScientificPurpose] (Notes:String, Purpose:String)
+     * ******* EpochGroup (ChildLeafDescendants:EpochGroup[], Children:EpochGroup[], EpochCount:int, Epochs:Epoch[], EpochsUnsorted:Epoch[], Experiment:Experiement, Label:String, Parent:EpochGroup, SerializedLocation:String, Source:Source)
+     * ******* PurposeAndNotesEntity[IOwnerNotes,IScientificPurpose] (Notes:String, Purpose:String) (package-private)
      * ******** Experiment (EpochGroups:EpochGroup[], Epochs:Epoch[], ExternalDevices:ExternalDevice[], Projects:Project[], SerializedLocation:String, Sources:Source[])
      * ******** Project (AnalysisRecords:AnalysisRecord[], AnalysisRecordNames:String[], Experiments:Experiment[], MyAnalysisRecords:AnalysisRecord[], MyAnalysisRecordNames:String[], Name:String, SerializedLocation:String)
+     * ***** Annotation[IAnnotation(ITaggableEntityBase)] (annotated:IAnnotatableEntityBase[], text:string)
+     * ****** ImageAnnotation (shape:IShape) - v1.2
+     * ****** Note[INoteAnnotation(IAnnotation)] (no properties or collections) - v1.2
+     * ****** TimelineAnnotation[ITimelineAnnotation(IAnnotation)] (endTime:DateTime, startTime:DateTime) - v1.2
+     * ***** Group (groupName:string) - v1.2
+     * ***** User (username:string)
+     * ImageAnnotatable(DataBytes:byte[], DataStream:InputStream, CoordinateSystems:CoordinateSystem[], MyCoordinateSystems:CoordinateSystem[]) - v1.2
+     * 
+     * 
      */
     
     /**  
@@ -252,7 +290,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
      * Ovation model changes
      */
     protected static void addEntityBase(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
-    	addProperties (propertyTypeMap,   PropertyName.Owner, PropertyName.URI, PropertyName.UUID, PropertyName.IsIncomplete); 
+    	addProperties (propertyTypeMap,   PropertyName.URI, PropertyName.UUID, PropertyName.IsIncomplete, PropertyName.Owner); 
         addCollections(collectionTypeMap, CollectionName.MyProperties, CollectionName.Properties, CollectionName.ResourceNames, CollectionName.Resources);    
         // no parent type within Ovation
     }    
@@ -283,8 +321,14 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
         addCollections(collectionTypeMap, CollectionName.AllEpochGroups, CollectionName.AllExperiments, CollectionName.ChildLeafSourceDescendants, CollectionName.SourceChildren, CollectionName.EpochGroups, CollectionName.Experiments);
         addAnnotatableEntityBase(propertyTypeMap, collectionTypeMap);
     }    
+    protected static void addImageAnnotatable(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
+        addProperties (propertyTypeMap,   PropertyName.DataBytes);
+        addCollections(collectionTypeMap, CollectionName.CoordinateSystems, CollectionName.MyCoordinateSystems);
+        addAnnotatableEntityBase(propertyTypeMap, collectionTypeMap);
+    }    
     protected static void addResource(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
     	addProperties (propertyTypeMap,   PropertyName.Data, PropertyName.Name, PropertyName.Notes, PropertyName.UTI); 
+        addImageAnnotatable(propertyTypeMap, collectionTypeMap);    // implemented by ResponseDataBase, Response (which extends ResponseDataBase), and Resource
         addAnnotatableEntityBase(propertyTypeMap, collectionTypeMap);
     }    
     protected static void addURLResource(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
@@ -304,6 +348,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     protected static void addResponseDataBase(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
     	addProperties (propertyTypeMap,   PropertyName.ByteOrder, PropertyName.NumericDataFormat, PropertyName.NumericByteOrder, PropertyName.SampleBytes, PropertyName.Data); 
         addCollections(collectionTypeMap, CollectionName.MatlabShape, CollectionName.Shape, CollectionName.FloatingPointData, CollectionName.IntegerData, CollectionName.UnsignedIntData);
+        addImageAnnotatable(propertyTypeMap, collectionTypeMap);    // implemented by ResponseDataBase, Response (which extends ResponseDataBase), and Resource
         addIOBase(propertyTypeMap, collectionTypeMap);
     }    
     protected static void addResponse(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
@@ -331,6 +376,8 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
         addTimelineElement(propertyTypeMap, collectionTypeMap);
     }    
     protected static void addPurposeAndNotesEntity(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
+        // addProperties(IOwnerNotes { String getNotes(); TODO
+        // addProperties(IScientificPurpose {String getPurpose(); TODO
     	addProperties (propertyTypeMap,   PropertyName.Notes, PropertyName.Purpose); 
         addTimelineElement(propertyTypeMap, collectionTypeMap);
     }    
@@ -353,7 +400,22 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     	addProperties (propertyTypeMap,   PropertyName.Text);
     	addCollections(collectionTypeMap, CollectionName.Annotated);
         addTaggableEntityBase(propertyTypeMap, collectionTypeMap);
-    } 
+    }
+    // CoordinateSystem extends EntityBase
+    protected static void addCoordinateSystem(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
+        addProperties(propertyTypeMap, PropertyName.Name);
+        addCollections(collectionTypeMap, CollectionName.ReferencePoint, CollectionName.ScaleFactors, CollectionName.Units);
+        addEntityBase(propertyTypeMap, collectionTypeMap);
+    }
+    // IShape extends nothing
+    protected static void addIShape(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
+        addProperties(propertyTypeMap, PropertyName.Shape);
+    }
+    // Group extends ITaggableEntityBase
+    protected static void addGroup(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
+        addProperties(propertyTypeMap, PropertyName.GroupName);
+        addTaggableEntityBase(propertyTypeMap, collectionTypeMap);
+    }
 
     
     /**
@@ -369,10 +431,10 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     // IEntityBase extends IooObj
     protected static Object getProperty(IEntityBase obj, PropertyName prop) {
     	switch (prop) {
-    		case Owner:			return (obj.getOwner() != null ? obj.getOwner().getUsername() : null);
     		case URI:			return obj.getURIString();	// always return String version - URI version just confuses odata4j
     		case UUID:			return obj.getUuid();
     		case IsIncomplete:	return obj.isIncomplete();
+            case Owner:         return obj.getOwner();
 //    		case SerializedName:return obj.getSerializedName();
     		default: 			_log.error("Unknown property '" + prop + "' for type '" + obj + "'"); return null;	// nowhere to go from here
     	}
@@ -419,11 +481,27 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
 
     // AnnotatableEntityBase extends TaggableEntityBase implements IAnnotatableEntityBase
     protected static Object getProperty(IAnnotatableEntityBase obj, PropertyName prop) {
+        // all classes that implement ImageAnnotatable also extend IAnnotatableEntityBase
+        // this seems better than adding support for it in 3 different places (Response, DerivedResponse, and Resource)
+        if (obj instanceof ImageAnnotatable) {
+            switch (prop) {
+                case DataBytes : return ((ImageAnnotatable)obj).getDataBytes();
+            }
+        }        
     	switch (prop) {
     		default: return getProperty((ITaggableEntityBase)obj, prop);
     	}
     }
     protected static Iterable<?> getCollection(IAnnotatableEntityBase obj, CollectionName col) {
+        // all classes that implement ImageAnnotatable also extend IAnnotatableEntityBase
+        // this seems better than adding support for it in 3 different places (Response, DerivedResponse, and Resource)
+        if (obj instanceof ImageAnnotatable) {
+            switch (col) {
+                case CoordinateSystems  : return CollectionUtils.makeIterable(((ImageAnnotatable)obj).getCoordinateSystems()); 
+                case MyCoordinateSystems: return CollectionUtils.makeIterable(((ImageAnnotatable)obj).getMyCoordinateSystems());
+            }
+        }
+
     	switch (col) {
 			case AnnotationGroupTags: 	return CollectionUtils.makeIterable(obj.getAnnotationGroupTags());
 			case Annotations:			return obj.getAnnotationsIterable();
@@ -492,7 +570,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     // Resource extends AnnotatableEntityBase
     protected static Object getProperty(Resource obj, PropertyName prop) {
     	switch (prop) {
-    		case Data:	return obj.getData();
+    		case Data:	return obj.getDataBytes();
     		case Name:	return obj.getName();
     		case Notes:	return obj.getNotes();
     		case UTI:	return obj.getUti();
@@ -529,7 +607,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     protected static Iterable<?> getCollection(IIOBase obj, CollectionName col) {
     	switch (col) {
 			case DeviceParameters: 	return Property.makeIterable(obj.getDeviceParameters());
-			case DimensionLabels:	return CollectionUtils.makeEmptyIterable();//  obj.getDimensionLabels();	// FIXME - add to IIOBase
+			case DimensionLabels:	return CollectionUtils.makeIterable(obj.getDimensionLabels());
 			default: return getCollection((IAnnotatableEntityBase)obj, col);
 		}
     }
@@ -545,22 +623,13 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     protected static Iterable<?> getCollection(Stimulus obj, CollectionName col) {
     	switch (col) {
 			case StimulusParameters:    return Property.makeIterable(obj.getStimulusParameters());
-			case DimensionLabels:		return CollectionUtils.makeIterable(obj.getDimensionLabels());	// FIXME - add to IIOBase
 			default: 					return getCollection((IIOBase)obj, col);
 		}
     }
     
-    // ResponseDataBase extends IOBase implements IResponseDataBase (FIXME but IResponseDataBase has no methods so it's pretty useless as an interface here) 
-    protected static Object getProperty(IResponseDataBase obj, PropertyName prop) {
-    	// since IResponseDataBase has no methods we need to cast back down to implementation type to get a handle to the methods :(
-    	Response 		res = obj instanceof Response ? (Response)obj : null;
-    	DerivedResponse dRes = obj instanceof DerivedResponse ? (DerivedResponse)obj : null;
-    	if (res == null && dRes == null) {
-    		_log.error("IResponseDataBase that isn't Response or DerivedResponse - can't use - " + obj);
-    		return getProperty((IIOBase)obj, prop);
-    	}
-		NumericData 		data = res != null ? res.getData() : dRes.getData();
-    	
+    // ResponseDataBase extends IOBase implements IResponseData 
+    protected static Object getProperty(IResponseData obj, PropertyName prop) {
+		NumericData   data = obj.getData();
     	try {
 	    	switch (prop) {
 		    	case ByteOrder:			return String.valueOf(data.getByteOrder());
@@ -577,23 +646,16 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
 		}
     }
     
-    protected static Iterable<?> getCollection(IResponseDataBase obj, CollectionName col) {
-    	Response 		res = obj instanceof Response ? (Response)obj : null;
-    	DerivedResponse dRes = obj instanceof DerivedResponse ? (DerivedResponse)obj : null;
-    	if (res == null && dRes == null) {
-    		_log.error("IResponseDataBase that isn't Response or DerivedResponse - can't use - " + obj);
-    		return getCollection((IIOBase)obj, col);
-    	}
-		NumericData 		data = res != null ? res.getData() : dRes.getData();
+    protected static Iterable<?> getCollection(IResponseData obj, CollectionName col) {
+		NumericData 		data = obj.getData();
 		NumericDataFormat 	type = data.getDataFormat();
-    	
+
     	switch (col) {
-			case MatlabShape:		return CollectionUtils.makeIterable(res != null ? res.getMatlabShape() 		: dRes.getMatlabShape());
-			case Shape:				return CollectionUtils.makeIterable(res != null ? res.getShape() 			: dRes.getShape());
-			case DimensionLabels:	return CollectionUtils.makeIterable(res != null ? res.getDimensionLabels() 	: dRes.getDimensionLabels());	// FIXME - should be added to IIOBase
-			case FloatingPointData:	return type == NumericDataFormat.FloatingPointDataType   ? CollectionUtils.makeIterable(data.getFloatingPointData()) : null;
-			case IntegerData:		return type == NumericDataFormat.IntegerDataType 		 ? CollectionUtils.makeIterable(data.getIntegerData()) 		 : null;
-			case UnsignedIntData:	return type == NumericDataFormat.UnsignedIntegerDataType ? CollectionUtils.makeIterable(data.getUnsignedIntData()) 	 : null;
+			case MatlabShape:		return CollectionUtils.makeIterable(obj.getMatlabShape());
+			case Shape:				return CollectionUtils.makeIterable(obj.getShape());
+			case FloatingPointData:	return type == NumericDataFormat.FloatingPointDataType      ? CollectionUtils.makeIterable(data.getFloatingPointData()) : null;
+			case IntegerData:		return type == NumericDataFormat.SignedFixedPointDataType   ? CollectionUtils.makeIterable(data.getIntegerData()) 		: null;
+            case UnsignedIntData:	return type == NumericDataFormat.UnsignedFixedPointDataType ? CollectionUtils.makeIterable(data.getUnsignedIntData()) 	: null;
 			default: 				return getCollection((IIOBase)obj, col);
 		}
     }
@@ -603,14 +665,14 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     	switch (prop) {
     		case Epoch:				return obj.getEpoch();
     		case UTI:				return obj.getUTI();
-    		default: 				return getProperty((IResponseDataBase)obj, prop);
+    		default: 				return getProperty((IResponseData)obj, prop);
     	}
     }
     protected static Iterable<?> getCollection(Response obj, CollectionName col) {
     	switch (col) {
 			case SamplingRates:	return CollectionUtils.makeIterable(obj.getSamplingRates());
 			case SamplingUnits: return CollectionUtils.makeIterable(obj.getSamplingUnits());
-			default: 			return getCollection((IResponseDataBase)obj, col);
+			default: 			return getCollection((IResponseData)obj, col);
 		}
     }
     
@@ -620,13 +682,13 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     		case Description: 			return obj.getDescription();
     		case Epoch:					return obj.getEpoch();
     		case Name:					return obj.getName();
-    		default: 					return getProperty((IResponseDataBase)obj, prop);
+    		default: 					return getProperty((IResponseData)obj, prop);
     	}
     }
     protected static Iterable<?> getCollection(DerivedResponse obj, CollectionName col) {
     	switch (col) {
 			case DerivationParameters : return Property.makeIterable(obj.getDerivationParameters());
-			default: 					return getCollection((IResponseDataBase)obj, col);
+			default: 					return getCollection((IResponseData)obj, col);
 		}
     }
     
@@ -702,7 +764,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     protected static Iterable<?> getCollection(Experiment obj, CollectionName col) {
     	switch (col) {
     		case EpochGroups:		return CollectionUtils.makeIterable(obj.getEpochGroups());
-    		case Epochs:			return obj.getEpochIterable();
+    		case Epochs:			return obj.getEpochsIterable();
     		case ExternalDevices:	return CollectionUtils.makeIterable(obj.getExternalDevices());
     		case Projects:			return CollectionUtils.makeIterable(obj.getProjects());
     		case Sources:   		return CollectionUtils.makeIterable(obj.getSources());
@@ -740,7 +802,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
     }    
     protected static Iterable<?> getCollection(User obj, CollectionName col) {
     	switch (col) {
-	    	default: 					return getCollection((ITaggableEntityBase)obj, col); 
+	    	default: return getCollection((ITaggableEntityBase)obj, col); 
     	}
     }
 
@@ -757,6 +819,163 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
 	    	default:		return getCollection((ITaggableEntityBase)obj, col); 
     	}
     }
+    
+    // ImageAnnotatable extends IAnnotatableEntityBase
+    /** @since 1.2 */
+    protected static Object getProperty(ImageAnnotatable obj, PropertyName prop) {
+        switch (prop) {
+            // TODO? public abstract java.io.InputStream getDataStream();
+            // TODO? public abstract byte[] getDataBytes();
+            default:    return getProperty((IAnnotatableEntityBase)obj, prop); 
+        }
+    }
+    /** @since 1.2 */
+    protected static Iterable<?> getCollection(ImageAnnotatable obj, CollectionName col) {
+        switch (col) {
+            case MyCoordinateSystems:   return CollectionUtils.makeIterable(obj.getMyCoordinateSystems());
+            case CoordinateSystems:     return CollectionUtils.makeIterable(obj.getCoordinateSystems());
+            default:                    return getCollection((IAnnotatableEntityBase)obj, col); 
+        }
+    }
+    
+    // CoordinateSystem extends EntityBase
+    /** @since 1.2 */
+    protected static Object getProperty(CoordinateSystem obj, PropertyName prop) {
+        switch (prop) {
+            case Name : return obj.getName();
+            default:    return getProperty((IEntityBase)obj, prop); 
+        }
+    }    
+    /** @since 1.2 */
+    protected static Iterable<?> getCollection(CoordinateSystem obj, CollectionName col) {
+        switch (col) {
+            case ReferencePoint:return CollectionUtils.makeIterable(obj.getReferencePoint());
+            case ScaleFactors:  return CollectionUtils.makeIterable(obj.getScaleFactors());
+            case Units:         return CollectionUtils.makeIterable(obj.getUnits());
+            default:            return getCollection((IEntityBase)obj, col); 
+        }
+    }
+
+/* TODO - none of these are public, but each has a *View class which is and implements IShape which is what's returned by getShape below    
+    * ***** Line (endX:double, endY:double, startX:double, startY:double) - v1.2
+    
+    * ***** Oval (height:double, width:double, x:double, y:double) - v1.2
+    * ***** Point (coordinates:double[]) - v1.2
+    * ***** Polygon (xCoordinates:double[], yCoordinates:double[]) - v1.2
+    
+*/
+
+    // IShape extends nothing, but is implemented by LineView, OvalView, PointView, and PolygonView (all of which have different data, which makes the metadata difficult)
+    // everything that implements IShape (currently) also don't extend anything so we can't pass the call up to anybody
+    /** @since 1.2 */
+    protected static Object getProperty(IShape obj, PropertyName prop) {
+        switch (prop) {
+            case CoordinateSystem: obj.getCoordinateSystem();
+            default              : _log.error("Unknown property '" + prop + "' for type '" + obj + "'"); return null;   // nowhere to go from here 
+        }
+    }    
+    /** @since 1.2 */
+    protected static Iterable<?> getCollection(IShape obj, CollectionName col) {
+        switch (col) {
+            default: _log.error("Unknown collection '" + col + "' for type '" + obj + "'"); return null; 
+        }
+    }
+    
+    // URLResponse extends Response
+    /** @since 1.2 */
+    protected static Object getProperty(URLResponse obj, PropertyName prop) {
+        switch (prop) {
+            case Data       : return obj.getData();
+            case DataBytes  : return obj.getDataBytes();
+//          case DataStream : return obj.getDataStream();
+            case URL        : return obj.getURLString();
+            default         : return getProperty((Response)obj, prop); 
+        }
+    }    
+    /** @since 1.2 */
+    protected static Iterable<?> getCollection(URLResponse obj, CollectionName col) {
+        switch (col) {
+            default: return getCollection((Response)obj, col); 
+        }
+    }
+
+    // IndexedURLResponse extends URLResponse
+    /** @since 1.2 */
+    protected static Object getProperty(IndexedURLResponse obj, PropertyName prop) {
+        switch (prop) {
+            case End    : return Long.valueOf(obj.getEnd());
+            case Start  : return Long.valueOf(obj.getStart());
+            default     : return getProperty((URLResponse)obj, prop); 
+        }
+    }    
+    /** @since 1.2 */
+    protected static Iterable<?> getCollection(IndexedURLResponse obj, CollectionName col) {
+        switch (col) {
+            default: return getCollection((URLResponse)obj, col); 
+        }
+    }
+
+
+    // ImageAnnotation implements IAnnotation
+    /** @since 1.2 */
+    protected static Object getProperty(ImageAnnotation obj, PropertyName prop) {
+        switch (prop) {
+            case Shape  : return obj.getShape(); 
+            default     : return getProperty((IAnnotation)obj, prop); 
+        }
+    }    
+    /** @since 1.2 */
+    protected static Iterable<?> getCollection(ImageAnnotation obj, CollectionName col) {
+        switch (col) {
+            default: return getCollection((IAnnotation)obj, col); 
+        }
+    }
+
+    // INoteAnnotation extends IAnnotation
+    /** @since 1.2 */
+    protected static Object getProperty(INoteAnnotation obj, PropertyName prop) {
+        switch (prop) {
+            default     : return getProperty((IAnnotation)obj, prop); 
+        }
+    }    
+    /** @since 1.2 */
+    protected static Iterable<?> getCollection(INoteAnnotation obj, CollectionName col) {
+        switch (col) {
+            default: return getCollection((IAnnotation)obj, col); 
+        }
+    }
+
+    // ImageAnnotation implements IAnnotation
+    /** @since 1.2 */
+    protected static Object getProperty(TimelineAnnotation obj, PropertyName prop) {
+        switch (prop) {
+            case EndTime    : return obj.getEndTime();
+            case StartTime  : return obj.getStartTime();
+            default         : return getProperty((IAnnotation)obj, prop); 
+        }
+    }    
+    /** @since 1.2 */
+    protected static Iterable<?> getCollection(TimelineAnnotation obj, CollectionName col) {
+        switch (col) {
+            default: return getCollection((IAnnotation)obj, col); 
+        }
+    }
+
+    // Group implements ITaggableEntityBase
+    /** @since 1.2 */
+    protected static Object getProperty(Group obj, PropertyName prop) {
+        switch (prop) {
+            case GroupName : return obj.getGroupName();
+            default         : return getProperty((ITaggableEntityBase)obj, prop); 
+        }
+    }    
+    /** @since 1.2 */
+    protected static Iterable<?> getCollection(Group obj, CollectionName col) {
+        switch (col) {
+            default: return getCollection((ITaggableEntityBase)obj, col); 
+        }
+    }
+
     
     /* cast the Value type to a type which subclasses IEntityBase
      * @throws ClassCastException if the value-type doesn't extended from Ovations IEntityBase
