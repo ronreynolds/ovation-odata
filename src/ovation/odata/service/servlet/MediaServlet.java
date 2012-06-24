@@ -54,8 +54,8 @@ public class MediaServlet extends HttpServlet {
 		}
 		
 		// load the requested media
-		String uti  = resource != null ? resource.getUti()  : response.getUTI();
-		byte[] data = resource != null ? resource.getData() : response.getDataBytes();
+		String uti  = resource != null ? resource.getUti()        : response.getUTI();
+		byte[] data = resource != null ? resource.getDataBytes()  : response.getDataBytes();
 		
 		if (data == null) {
 			resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Unable to find any data for " + uri);
@@ -80,4 +80,6 @@ public class MediaServlet extends HttpServlet {
 			_log.error("Unknown UTI type - '" + uti + "'");
 		}
 	}
+	
+	public static String generateUrl() { return null; } // TODO
 }
