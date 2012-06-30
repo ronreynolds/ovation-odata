@@ -322,12 +322,12 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
         addAnnotatableEntityBase(propertyTypeMap, collectionTypeMap);
     }    
     protected static void addImageAnnotatable(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
-        addProperties (propertyTypeMap,   PropertyName.DataBytes);
+//FIXME        addProperties (propertyTypeMap,   PropertyName.DataBytes);
         addCollections(collectionTypeMap, CollectionName.CoordinateSystems, CollectionName.MyCoordinateSystems);
         addAnnotatableEntityBase(propertyTypeMap, collectionTypeMap);
     }    
     protected static void addResource(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
-    	addProperties (propertyTypeMap,   PropertyName.Data, PropertyName.Name, PropertyName.Notes, PropertyName.UTI); 
+    	addProperties (propertyTypeMap,   PropertyName.Name, PropertyName.Notes, PropertyName.UTI);    // FIXME PropertyName.Data,  
         addImageAnnotatable(propertyTypeMap, collectionTypeMap);    // implemented by ResponseDataBase, Response (which extends ResponseDataBase), and Resource
         addAnnotatableEntityBase(propertyTypeMap, collectionTypeMap);
     }    
@@ -346,7 +346,7 @@ public abstract class OvationModelBase<V extends IEntityBase> extends ExtendedPr
         addIOBase(propertyTypeMap, collectionTypeMap);
     }    
     protected static void addResponseDataBase(Map<String,Class<?>> propertyTypeMap, Map<String,Class<?>> collectionTypeMap) {
-    	addProperties (propertyTypeMap,   PropertyName.ByteOrder, PropertyName.NumericDataFormat, PropertyName.NumericByteOrder, PropertyName.SampleBytes, PropertyName.Data); 
+    	addProperties (propertyTypeMap,   PropertyName.ByteOrder, PropertyName.NumericDataFormat, PropertyName.NumericByteOrder, PropertyName.SampleBytes);    // FIXME , PropertyName.Data 
         addCollections(collectionTypeMap, CollectionName.MatlabShape, CollectionName.Shape, CollectionName.FloatingPointData, CollectionName.IntegerData, CollectionName.UnsignedIntData);
         addImageAnnotatable(propertyTypeMap, collectionTypeMap);    // implemented by ResponseDataBase, Response (which extends ResponseDataBase), and Resource
         addIOBase(propertyTypeMap, collectionTypeMap);
