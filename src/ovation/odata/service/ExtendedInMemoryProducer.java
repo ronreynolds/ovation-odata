@@ -1,14 +1,15 @@
 package ovation.odata.service;
 
 import java.lang.reflect.Field;
+import java.util.AbstractMap;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.core4j.Func;
+import org.odata4j.core.OEntities;
 import org.odata4j.core.OEntity;
 import org.odata4j.core.OEntityKey;
 import org.odata4j.core.OFunctionParameter;
@@ -16,6 +17,8 @@ import org.odata4j.edm.EdmDataServices;
 import org.odata4j.edm.EdmDecorator;
 import org.odata4j.edm.EdmEntitySet;
 import org.odata4j.edm.EdmFunctionImport;
+import org.odata4j.expression.EntitySimpleProperty;
+import org.odata4j.internal.EdmDataServicesDecorator;
 import org.odata4j.producer.BaseResponse;
 import org.odata4j.producer.EntitiesResponse;
 import org.odata4j.producer.EntityQueryInfo;
@@ -42,7 +45,8 @@ public class ExtendedInMemoryProducer extends InMemoryProducer {
     public static final Logger _log = Logger.getLogger(ExtendedInMemoryProducer.class);
     private final Map<String, InMemoryEntityInfo<?>> _eis;
     private final Field _hasStream;
-    
+    private final Field _properties;
+
     public ExtendedInMemoryProducer(String namespace, int maxResults) {
         this(namespace, null, maxResults, null, null); 
     }
@@ -63,6 +67,8 @@ public class ExtendedInMemoryProducer extends InMemoryProducer {
         try {
             _hasStream = InMemoryEntityInfo.class.getDeclaredField("hasStream");
             _hasStream.setAccessible(true);
+            _properties = InMemoryEntityInfo.class.getDeclaredField("properties");
+            _properties.setAccessible(true);
         } catch (Exception e) {
             throw new IllegalStateException("unable to get hasStream field of InMemoryEntityInfo - odata4j may have changed - " + e, e);
         }
@@ -72,9 +78,7 @@ public class ExtendedInMemoryProducer extends InMemoryProducer {
      * @param entityClass       the Java class type of the entity being registered
      * @param propertyModel     the model instance that handles the registered type
      * @param entitySetName     the name added to the URL to identify a request for this entity type
-     * @param entityTypeName    TODO ?? (unknown)
      * @param get               Func object which returns Iterable<TEntity> to get all entities of this type
-     * @param keys              one or more keys for the entity TODO ?? (not sure)
      */
     public <TEntity> void register( final Class<TEntity> entityClass, 
                                     final ExtendedPropertyModel<?> propertyModel, 
@@ -98,25 +102,37 @@ public class ExtendedInMemoryProducer extends InMemoryProducer {
             _log.error("failed to access hasStream within InMemoryEntityInfo - odata4j may have changed - " + ex, ex);
         }
     }
+
+    Map<String,Map.Entry<EdmFunctionImport,ServiceOperationHandler>> _functionDescriptors = Maps.newHashMap();
     
-    /** 
-     * Obtains the service metadata for this producer.
-     * @return a fully-constructed metadata object
+    public void register(final EdmFunctionImport functionDesc, final ServiceOperationHandler handler) {
+        _functionDescriptors.put(functionDesc.getName(), 
+                new AbstractMap.SimpleImmutableEntry<EdmFunctionImport,ServiceOperationHandler>(functionDesc, handler));
+    }
+
+    /**
+     * overwrite getMetadata so we can alter it without having to go through the mystery path to 
+     * add EdmFunctionImport objects
      */
-    @Override
     public EdmDataServices getMetadata() {
         try {
-            EdmDataServices result = super.getMetadata();
-            if (_log.isDebugEnabled()) {
-                _log.debug("getMetadata() - " + result);
-            }
+            final EdmDataServices metadata = super.getMetadata();
+            
+            // here we decorate the metadata so we can properly get things routed to registered service-operation handlers
+            EdmDataServices result = new EdmDataServicesDecorator() {
+                protected EdmDataServices getDelegate() { return metadata; }    // most is passed thru to the super-class metadata
+                public EdmFunctionImport findEdmFunctionImport(String functionImportName) {
+                    Map.Entry<EdmFunctionImport,ServiceOperationHandler> descriptor = _functionDescriptors.get(functionImportName);
+                    return descriptor != null ? descriptor.getKey() : null;
+                }
+            };
             return result;
         } catch (Throwable ex) {
             _log.error("failed to getMetadata()", ex);
             throw new RuntimeException(ex.toString(), ex);
         }
     }
-    
+
     /**
      * Creates a new OData entity.
      * 
@@ -343,12 +359,33 @@ public class ExtendedInMemoryProducer extends InMemoryProducer {
             // make sure to detach the QueryInfo from the thread when we're done
             ExtendedPropertyModel.setQueryInfo(null);
         }
-    }       
+    }
+    
+    /** @since 1.2 */
+    @Override
+    protected OEntity toOEntity(EdmEntitySet ees, Object obj, List<EntitySimpleProperty> expand) {
+        // let the base class do the hard work
+        OEntity oEntity = super.toOEntity(ees, obj, expand);
+        // determine if we need to a stream handler to this guy
+        InMemoryEntityInfo<?> info = _eis.get(ees.getName());
+        
+        try {
+            @SuppressWarnings("unchecked")
+            ExtendedPropertyModel<Object> model = (ExtendedPropertyModel<Object>)_properties.get(info);
+            if (model.hasStream()) {
+                oEntity = OEntities.create(oEntity.getEntitySet(), oEntity.getEntityKey(), oEntity.getProperties(), oEntity.getLinks(), obj, model.getStreamHandler(obj));
+            }
+        } catch (Exception ex) {
+            _log.error("failed to get properties via reflection in InMemoryEntityInfo - " + ex, ex);
+        }
+
+        return oEntity;
+    }
 
     /**
      * Call a function (aka Service Operation)
      *
-     * @param name  the name of the function
+     * @param funcDesc  the name and other metadata about the function
      * @param params  the parameters to the function
      * @param queryInfo  additional query parameters to apply to collection-valued results
      * @return a BaseResponse appropriately typed to hold the function results
@@ -364,26 +401,16 @@ public class ExtendedInMemoryProducer extends InMemoryProducer {
      *        A ref type or collection of ref types.</pre>
      */ 
     @Override
-    public BaseResponse callFunction(EdmFunctionImport name, Map<String, OFunctionParameter> params, QueryInfo queryInfo) {
-        _log.error("callFunction(" + name + ", " + params + ", " + queryInfo);
-        ServiceOperationHandler handler = getServiceHandler(name);
-        if (handler == null) {
-            throw new NotFoundException(name.getName() + " not found");
+    public BaseResponse callFunction(EdmFunctionImport funcDesc, Map<String, OFunctionParameter> params, QueryInfo queryInfo) {
+        _log.error("callFunction(" + funcDesc + ", " + params + ", " + queryInfo);
+        Map.Entry<EdmFunctionImport,ServiceOperationHandler> descriptor = _functionDescriptors.get(funcDesc.getName());
+        if (descriptor != null) {
+            return descriptor.getValue().execute(funcDesc, params, queryInfo);
         }
-        return handler.execute(params, queryInfo); 
+        return super.callFunction(funcDesc, params, queryInfo);
     }
 
-    static interface ServiceOperationHandler {
-        BaseResponse execute(Map<String, OFunctionParameter> params, QueryInfo queryInfo);
-    }
-    Map<EdmFunctionImport, ServiceOperationHandler> _serviceHandlers = Maps.newTreeMap(new Comparator<EdmFunctionImport>() {
-        @Override
-        public int compare(EdmFunctionImport o1, EdmFunctionImport o2) {
-            // TODO Auto-generated method stub
-            return 0;
-        }
-    });
-    protected ServiceOperationHandler getServiceHandler(EdmFunctionImport name) {
-        return _serviceHandlers.get(name);
+    public static interface ServiceOperationHandler {
+        BaseResponse execute(EdmFunctionImport funcDesc, Map<String, OFunctionParameter> params, QueryInfo queryInfo);
     }
 }
