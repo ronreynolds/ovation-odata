@@ -12,15 +12,14 @@ import org.apache.log4j.Logger;
 import ovation.IEntityBase;
 import ovation.Resource;
 import ovation.Response;
-import ovation.odata.model.ResourceModel;
+import ovation.odata.model.OvationModelBase;
 import ovation.odata.util.TypeDataMap;
 import ovation.odata.util.TypeDataMap.TypeData;
 
 /**
  * servlet to serve up media (images, avis, etc) based on element URI
- * e.g., http://localhost:8080/ovodata/media/?uri=ovation:///2c8fec8a-0248-444b-b42b-af46df407712/#7-2-1-2:1000049
- * e.g., http://localhost:8080/ovodata/media/?uri=ovation%3A%2F%2F%2F2c8fec8a-0248-444b-b42b-af46df407712%2F%237-2-1-2%3A1000049
- * 
+ * e.g., http://localhost:8080/ovodata/media/ovation%3A%2F%2F%2F2c8fec8a-0248-444b-b42b-af46df407712%2F%237-2-1-2%3A1000049
+ *                                          (ovation:///2c8fec8a-0248-444b-b42b-af46df407712/#7-2-1-2:1000049) 
  * @author Ron
  *
  */
@@ -30,17 +29,27 @@ public class MediaServlet extends HttpServlet {
 	
 	@Override
 	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		// determine the key of the requested media (Resource)
-		String uri = req.getParameter("uri");
+	    final String requestUri  = req.getRequestURI();    // "/ovodata/media/fuzzywuzzywuzabear"
+	    final String contextPath = req.getContextPath();   // "/ovodata"
+	    final String servletPath = req.getServletPath();   // "/media"
+	    
+	    String uri = requestUri.substring(contextPath.length());   // trims off the "/ovodata" part
+	    uri = (uri.length() > servletPath.length() + 1) ? uri.substring(servletPath.length() + 1) : null;
+	    
+		_log.debug("uri = " + uri);
+		
 		if (uri == null) {
 			resp.sendError(HttpServletResponse.SC_NOT_FOUND, "No resource specified");
 			return;
 		}
 		
+//		uri = URLDecoder.decode(uri);
+		
 		// this requires the user already be authenticated in the context of this request
-		IEntityBase entity = ResourceModel.getByURI(uri);
+		IEntityBase entity = OvationModelBase.getByURI(uri);
 		if (entity == null) {
-			resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Unable to find " + uri);
+		    _log.info("no resource found for uri '" + uri + "'");
+			resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Unable to find entity " + uri);
 			return;
 		}
 		
@@ -49,6 +58,7 @@ public class MediaServlet extends HttpServlet {
 		Response response = entity instanceof Response ? (Response)entity : null;
 
 		if (resource == null && response == null) {
+            _log.info("entity @ '" + uri + "' is not supported - " + entity);
 			resp.sendError(HttpServletResponse.SC_UNSUPPORTED_MEDIA_TYPE, entity + " is of wrong type");
 			return;
 		}
@@ -58,6 +68,7 @@ public class MediaServlet extends HttpServlet {
 		byte[] data = resource != null ? resource.getDataBytes()  : response.getDataBytes();
 		
 		if (data == null) {
+            _log.info("entity @ '" + uri + "' contains no data to return - " + entity);
 			resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Unable to find any data for " + uri);
 			return;
 		}
@@ -70,6 +81,8 @@ public class MediaServlet extends HttpServlet {
 		resp.getOutputStream().write(data);
 		
 		// done - tomcat should handle flushing and all that
+        _log.info("returned entity @ '" + uri + "' - " + entity);
+
 	}
 	
 	static void setContentType(HttpServletResponse resp, String uti) {
@@ -81,5 +94,8 @@ public class MediaServlet extends HttpServlet {
 		}
 	}
 	
-	public static String generateUrl() { return null; } // TODO
+	/** @since 1.2 */
+	public static String generateUrl(IEntityBase obj) { 
+	    return "media/" + obj.getURIString(); //URLEncoder.encode(obj.getURIString()); 
+	}
 }
