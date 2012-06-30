@@ -50,4 +50,8 @@
         <servlet-name>Media</servlet-name>
         <url-pattern>/media/*</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>Media</servlet-name>
+        <url-pattern>/Ovodata.svc/media/*</url-pattern>
+    </servlet-mapping>
 </web-app>
