@@ -1,7 +1,5 @@
 package ovation.odata.model;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.HashMap;
 
 import org.apache.log4j.Logger;
@@ -10,6 +8,7 @@ import org.core4j.Func1;
 import org.odata4j.core.OAtomStreamEntity;
 
 import ovation.Response;
+import ovation.odata.service.servlet.MediaServlet;
 import ovation.odata.util.TypeDataMap;
 import ovation.odata.util.TypeDataMap.TypeData;
 
@@ -63,22 +62,24 @@ public class ResponseModel extends OvationModelBase<Response> {
     public Iterable<?>  getCollectionValue(Object target, String collectionName){ return getCollection((Response)target, CollectionName.valueOf(collectionName)); }
     public Object       getPropertyValue(Object target, String propertyName)    { return getProperty((Response)target,   PropertyName.valueOf(propertyName)); }
     
-    // TODO - this won't work since it'll expect the entity instance to implement this interface
-    public OAtomStreamEntity getStreamHandler(final Response res) {
+    public boolean              hasStream()      { return true; }
+    public OAtomStreamEntity    getStreamHandler(final Response obj) {
+        // if we don't want to allow streams to numeric types we can return null here
+        final String uti = obj.getUTI();
+        if (TypeDataMap.NUMERIC_DATA_UTI.equals(uti)) return null;
+
+        final TypeData typeData = TypeDataMap.getUTIData(uti);
+        
         return new OAtomStreamEntity() {
-            @Override public String getAtomEntityType() {  
-                TypeData typeData = TypeDataMap.getUTIData(res.getUTI());
-                return typeData != null ? typeData.getMimeType() : null;
+            public String getAtomEntitySource() { 
+                return MediaServlet.generateUrl(obj); 
             }
-            @Override public String getAtomEntitySource() {
-                try {
-                    return "/ovodata/media/?uri=" + URLEncoder.encode(res.getURIString(), "US-ASCII");
-                } catch (UnsupportedEncodingException e) {
-                    throw new Error("US-ASCII encoding not supported - something is terribly wrong");
-                }
+            public String getAtomEntityType()   { 
+                return (typeData != null) ? typeData.getMimeType() : null;
             }
-        };
+        }; 
     }
+    
     public Func<Iterable<Response>> allGetter() {
         return new Func<Iterable<Response>>() { 
             public Iterable<Response> apply() { 
