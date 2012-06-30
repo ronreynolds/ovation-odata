@@ -7,6 +7,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.core4j.Func;
 import org.core4j.Func1;
+import org.odata4j.core.OAtomStreamEntity;
 import org.odata4j.core.OEntityKey;
 import org.odata4j.producer.QueryInfo;
 import org.odata4j.producer.inmemory.PropertyModel;
@@ -96,6 +97,11 @@ public abstract class ExtendedPropertyModel<V> implements PropertyModel {
     public V 					getEntityByKey(OEntityKey key) { return null; }
     /** @return if the model should have a media-stream in its metadata */
     public boolean              hasStream() { return false; }
+    /** 
+     * this guy should be overloaded if the handler returns true from hasStream above
+     * @return the class which will provide stream data about the provided object 
+     */
+    public OAtomStreamEntity getStreamHandler(V obj) { return null; }
     
     // to be called from sub-class' ctor
     protected void setAllGetter(Func<Iterable<V>> allGetter) 	{ _allGetter = allGetter; }
@@ -104,7 +110,7 @@ public abstract class ExtendedPropertyModel<V> implements PropertyModel {
 //    /** @return the collection of values associated with the query */
 // FIXME	public abstract Iterable<V> executeQuery(String query);
 // FIXME    public Iterable<V> executeQueryInfo() { return (Iterable<V>)executeQueryInfo(getEntityType(), getQueryInfo()); }
-    
+
     
 
     
